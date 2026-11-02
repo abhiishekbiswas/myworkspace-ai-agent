@@ -1,0 +1,1802 @@
+# MY WORKSPACE
+## MASTER DEVELOPER HANDBOOK
+### Complete Android Application Development Specification
+
+**Product:** My Workspace  
+**Version:** 1.0  
+**Platform:** Android Native  
+**Development Environment:** Android Studio  
+**Language:** Kotlin  
+**UI Framework:** Jetpack Compose + Material 3  
+**Architecture:** MVVM + Clean Architecture  
+**Database:** Room / SQLite  
+**Development Approach:** Offline-First  
+**Product Scope:** Personal Use + Future Public Release  
+**Document Status:** Master Development Specification
+
+---
+
+# PART 1 — PRODUCT DEFINITION
+
+## 1.1 Product Vision
+
+My Workspace एक Premium Personal Project & Work Management Android Application है।
+
+इसका उद्देश्य उपयोगकर्ता के सभी व्यक्तिगत और व्यावसायिक Projects, Tasks, Subtasks, Checklists, Deadlines, Notes, Comments, Progress Updates और Work History को एक ही स्थान पर व्यवस्थित करना है।
+
+यह केवल To-Do List नहीं होगा।
+
+यह एक Personal Command Center होगा, जहां उपयोगकर्ता अपने सभी कामों को Create, Organize, Track, Update, Review और Complete कर सकेगा।
+
+## 1.2 Core Objectives
+
+1. Unlimited Projects Management.
+2. Hierarchical Task Management.
+3. Nested Subtasks.
+4. Advanced Checklists.
+5. Automatic Progress Calculation.
+6. Manual Progress Tracking.
+7. Weighted Progress Calculation.
+8. Comments and Progress History.
+9. Kanban Board.
+10. Calendar and Deadline Management.
+11. Productivity Analytics.
+12. Notes and Attachments.
+13. Global Search.
+14. Full Offline Functionality.
+15. Local Backup and Restore.
+16. Google Drive Backup.
+17. Premium UI and UX.
+18. Future Multi-device Synchronization.
+19. Future Team Collaboration.
+20. Future AI Productivity Assistant.
+
+## 1.3 Target User
+
+Primary user: Single-user personal productivity.
+
+Typical use cases:
+
+- Android Application Development.
+- Multiple Instagram Page Management.
+- Multiple YouTube Channel Management.
+- Video Script Writing.
+- Image Generation.
+- AI Video Generation.
+- Video Editing.
+- Social Media Publishing.
+- Business Projects.
+- Personal Learning.
+- Financial and Business Planning.
+- Daily Activities.
+
+## 1.4 Core Product Philosophy
+
+**One App. Multiple Projects. Complete Control.**
+
+हर Project का अपना अलग Workspace होगा।
+
+हर Task की अपनी Checklist, Progress, Comments और History होगी।
+
+हर महत्वपूर्ण बदलाव का रिकॉर्ड रहेगा।
+
+ऐप इंटरनेट के बिना भी काम करेगा।
+
+---
+
+# PART 2 — TECHNICAL FOUNDATION
+
+## 2.1 Technology Stack
+
+| Component | Technology |
+|---|---|
+| IDE | Android Studio |
+| Language | Kotlin |
+| UI | Jetpack Compose |
+| Design System | Material 3 |
+| Architecture | MVVM + Clean Architecture |
+| Database | Room / SQLite |
+| Preferences | DataStore |
+| Dependency Injection | Hilt |
+| Async Processing | Coroutines + Flow |
+| Navigation | Navigation Compose |
+| Background Jobs | WorkManager |
+| Notifications | Android NotificationManager |
+| Local Files | App Internal Storage |
+| File Access | Storage Access Framework |
+| Cloud Backup | Google Drive API |
+| Charts | Compose-compatible chart library |
+| Testing | JUnit + Compose UI Testing |
+
+Use current stable and mutually compatible dependency versions when setting up the project. Keep dependency versions centralized using Gradle Version Catalog.
+
+Do not blindly upgrade dependencies during feature development.
+
+## 2.2 Minimum Android Compatibility
+
+- Minimum SDK: Android 8.0 (API 26), unless a verified dependency requirement dictates otherwise.
+- Target SDK: Latest stable Android SDK supported by the selected Android Studio release.
+- Compile SDK: Same compatible stable SDK.
+- Support modern Android permission and notification behavior.
+- Handle Android process recreation correctly.
+- Support different screen sizes and display densities.
+
+## 2.3 Project Configuration
+
+Project Name: `MyWorkspace`
+
+Suggested Application ID:
+
+`com.myworkspace.app`
+
+Use Kotlin DSL for Gradle.
+
+Enable:
+
+- Kotlin.
+- Jetpack Compose.
+- Room.
+- Hilt.
+- Navigation Compose.
+- Kotlin Serialization.
+- WorkManager.
+- DataStore.
+- Unit Testing.
+- Instrumentation Testing.
+
+Avoid unnecessary libraries.
+
+---
+
+# PART 3 — APPLICATION ARCHITECTURE
+
+## 3.1 Architecture Pattern
+
+Use MVVM + Clean Architecture.
+
+Three major layers:
+
+### Presentation Layer
+
+Responsibilities:
+
+- Compose Screens.
+- UI Components.
+- ViewModels.
+- UI State.
+- Navigation.
+- User Interaction.
+- Loading and Error States.
+
+### Domain Layer
+
+Responsibilities:
+
+- Business Rules.
+- Use Cases.
+- Progress Calculation Engine.
+- Task Status Rules.
+- Project Completion Rules.
+- Backup Validation Rules.
+
+The Domain Layer must not depend on Android UI or Room implementation details.
+
+### Data Layer
+
+Responsibilities:
+
+- Room Database.
+- DAO Interfaces.
+- Repositories.
+- Data Mapping.
+- Local Storage.
+- Backup and Restore.
+- Google Drive Integration.
+
+## 3.2 Suggested Folder Structure
+
+```text
+com.myworkspace.app/
+
+├── app/
+│   ├── MyWorkspaceApplication.kt
+│   └── MainActivity.kt
+│
+├── core/
+│   ├── common/
+│   ├── designsystem/
+│   ├── navigation/
+│   ├── database/
+│   ├── datastore/
+│   ├── notifications/
+│   ├── backup/
+│   ├── filemanager/
+│   ├── security/
+│   └── testing/
+│
+├── data/
+│   ├── local/
+│   │   ├── dao/
+│   │   ├── entities/
+│   │   ├── relations/
+│   │   └── migrations/
+│   ├── repository/
+│   ├── mapper/
+│   └── backup/
+│
+├── domain/
+│   ├── model/
+│   ├── repository/
+│   ├── usecase/
+│   ├── progress/
+│   └── validation/
+│
+├── feature/
+│   ├── dashboard/
+│   ├── projects/
+│   ├── categories/
+│   ├── tasks/
+│   ├── subtasks/
+│   ├── checklist/
+│   ├── comments/
+│   ├── progress/
+│   ├── kanban/
+│   ├── calendar/
+│   ├── notes/
+│   ├── attachments/
+│   ├── analytics/
+│   ├── search/
+│   ├── archive/
+│   └── settings/
+│
+└── di/
+```
+
+## 3.3 Coding Principles
+
+1. Single Responsibility Principle.
+2. Separation of Concerns.
+3. Repository Pattern.
+4. Unidirectional Data Flow.
+5. Immutable UI State.
+6. Dependency Injection.
+7. Reusable Compose Components.
+8. No business calculations directly inside Composable functions.
+9. No direct database access from UI.
+10. No hardcoded user content.
+11. Proper error handling.
+12. Consistent naming conventions.
+
+All database operations must run off the main thread.
+
+All user-facing data must come from repositories or ViewModels.
+
+---
+
+# PART 4 — COMPLETE NAVIGATION SYSTEM
+
+## 4.1 Main Bottom Navigation
+
+Five primary navigation items:
+
+1. Home
+2. Projects
+3. Tasks
+4. Calendar
+5. More
+
+The More section contains:
+
+- Analytics.
+- Search.
+- Archive.
+- Notes.
+- Backup.
+- Settings.
+
+A Quick Add action should be available from the main screens.
+
+## 4.2 Navigation Requirements
+
+- Maintain navigation state when switching tabs.
+- Preserve screen state when appropriate.
+- Support Android Back navigation.
+- Handle process recreation.
+- Use typed and predictable navigation routes.
+- Avoid duplicate destinations.
+- Support deep links in future versions.
+
+---
+
+# PART 5 — SCREEN-BY-SCREEN SPECIFICATIONS
+
+## 5.1 Dashboard Screen
+
+Dashboard is the application's primary landing screen.
+
+### Top Section
+
+- Greeting.
+- Current Date.
+- Search Icon.
+- Notifications.
+- Profile / Settings Shortcut.
+
+### Statistics Cards
+
+- Total Projects.
+- Active Projects.
+- Completed Projects.
+- Pending Tasks.
+- Overdue Tasks.
+- Completed Tasks.
+
+### Overall Progress
+
+Show overall progress using a circular or horizontal progress indicator.
+
+Define whether the dashboard progress is based on active project weights or a simple average. Use weighted project progress with configurable equal default weights.
+
+Archived and cancelled projects must be excluded.
+
+### Today's Work
+
+Show:
+
+- Today's Tasks.
+- High Priority Tasks.
+- Overdue Tasks.
+- Upcoming Deadlines.
+
+### Project Overview
+
+Show:
+
+- Project Name.
+- Project Icon.
+- Project Category.
+- Progress Percentage.
+- Project Status.
+- Due Date.
+
+### Recent Activity
+
+Display the latest activities:
+
+- Project Created.
+- Task Created.
+- Task Completed.
+- Progress Updated.
+- Comment Added.
+- Deadline Changed.
+- Project Archived.
+
+### Quick Add
+
+Quick Add should support:
+
+- New Project.
+- New Task.
+- New Note.
+- Progress Update.
+
+---
+
+## 5.2 Projects Screen
+
+### Features
+
+- Grid View.
+- List View.
+- Sort.
+- Filter.
+- Search.
+- Category Filter.
+- Priority Filter.
+- Status Filter.
+- Archive Filter.
+
+### Create Project Form
+
+Fields:
+
+- Project Name.
+- Description.
+- Category.
+- Icon.
+- Color.
+- Priority.
+- Start Date.
+- Deadline.
+- Progress Mode.
+- Project Weight.
+- Tags.
+
+### Project Status
+
+- Planning.
+- Active.
+- On Hold.
+- Completed.
+- Cancelled.
+- Archived.
+
+### Project Operations
+
+- Create.
+- Edit.
+- Duplicate.
+- Archive.
+- Restore.
+- Delete.
+- Change Category.
+- Change Priority.
+
+Deleting a Project must never happen accidentally.
+
+Show a confirmation and offer an export or archive alternative.
+
+---
+
+## 5.3 Project Details Screen
+
+Every Project has its own workspace.
+
+Tabs:
+
+1. Overview.
+2. Tasks.
+3. Board.
+4. Notes.
+5. Updates.
+6. Files.
+7. Activity.
+
+### Overview
+
+Display:
+
+- Description.
+- Progress.
+- Project Status.
+- Priority.
+- Start Date.
+- Deadline.
+- Remaining Tasks.
+- Completed Tasks.
+- Recent Updates.
+
+### Tasks
+
+Display all Tasks belonging to the Project.
+
+Support grouping and sorting.
+
+### Board
+
+Show Tasks grouped by Status.
+
+### Notes
+
+Display Project-specific Notes.
+
+### Updates
+
+Display Progress Update History.
+
+### Files
+
+Display all associated Attachments.
+
+### Activity
+
+Display all Project activities chronologically.
+
+---
+
+## 5.4 Task Management Screen
+
+### Task Fields
+
+- Task ID.
+- Project ID.
+- Parent Task ID.
+- Title.
+- Description.
+- Status.
+- Priority.
+- Progress Mode.
+- Manual Progress.
+- Weight.
+- Start Date.
+- Due Date.
+- Completed Date.
+- Sort Order.
+- Created Date.
+- Updated Date.
+- Archived Date.
+
+### Task Statuses
+
+- Backlog.
+- To Do.
+- In Progress.
+- On Hold.
+- In Review.
+- Completed.
+- Cancelled.
+
+### Priority
+
+- Low.
+- Medium.
+- High.
+- Urgent.
+
+### Task Operations
+
+- Create.
+- Edit.
+- Duplicate.
+- Delete.
+- Archive.
+- Complete.
+- Reopen.
+- Move to Another Project.
+- Change Priority.
+- Change Status.
+- Change Deadline.
+
+### Task Details Screen
+
+Sections:
+
+1. Description.
+2. Subtasks.
+3. Checklist.
+4. Progress.
+5. Comments.
+6. Attachments.
+7. Reminders.
+8. Dependencies.
+9. Activity History.
+
+---
+
+## 5.5 Subtask Management
+
+Tasks must support nested subtasks.
+
+Use a self-referencing task relationship:
+
+`parentTaskId`
+
+Root Tasks have a null parentTaskId.
+
+Subtasks reference their immediate parent.
+
+Requirements:
+
+- Multiple nested levels.
+- Expand and Collapse.
+- Drag and Drop Ordering.
+- Independent Status.
+- Independent Priority.
+- Independent Due Date.
+- Independent Progress.
+- Comments.
+- Activity History.
+
+Prevent circular parent relationships.
+
+Provide a reasonable configurable nesting-depth limit to avoid performance problems.
+
+Deleting a parent must require a clear decision about its children.
+
+---
+
+## 5.6 Checklist Management
+
+Each Task can contain multiple checklist items.
+
+Features:
+
+- Add Item.
+- Edit Item.
+- Delete Item.
+- Reorder Item.
+- Complete Item.
+- Uncomplete Item.
+- Bulk Complete.
+- Bulk Uncomplete.
+
+Checklist Item Fields:
+
+- ID.
+- Task ID.
+- Title.
+- Description (optional).
+- Is Completed.
+- Sort Order.
+- Created At.
+- Completed At.
+
+Checklist changes must immediately update the relevant Task and Project progress.
+
+---
+
+## 5.7 Comments and Progress Updates
+
+This is a critical feature.
+
+The user must be able to record exactly where a task stopped and what happened during the last working session.
+
+### Comment Fields
+
+- ID.
+- Task ID.
+- Content.
+- Created At.
+- Updated At.
+
+### Comment Features
+
+- Add.
+- Edit.
+- Delete.
+- View History.
+- Chronological Timeline.
+
+### Progress Update Example
+
+Task: Video Generation.
+
+Update:
+
+"आज 3 वीडियो जनरेट किए। 2 वीडियो में फेस कंसिस्टेंसी की समस्या है। बाकी वीडियो का रिव्यू करना है।"
+
+Store the following:
+
+- Update Text.
+- Timestamp.
+- Previous Progress.
+- New Progress.
+- Related Task.
+- Update Source.
+
+Support comments that do not change progress.
+
+Support progress changes that include an optional comment.
+
+Never overwrite previous progress history.
+
+---
+
+# PART 6 — PROGRESS CALCULATION ENGINE
+
+## 6.1 Progress Modes
+
+Three supported modes:
+
+### Mode A: Automatic
+
+Progress is calculated from completed child Tasks or Checklist Items.
+
+### Mode B: Manual
+
+The user controls Progress from 0% to 100%.
+
+### Mode C: Weighted
+
+Progress is calculated using Task weights.
+
+## 6.2 Weighted Formula
+
+P = SUM(weight × progress) / SUM(weight)
+
+Where:
+
+- P = Overall Progress.
+- Weight = Importance of Task.
+- Progress = Completion Percentage.
+
+Example:
+
+| Task | Weight | Progress |
+|---|---:|---:|
+| UI Design | 20 | 100% |
+| Backend | 40 | 50% |
+| Testing | 30 | 40% |
+| Documentation | 10 | 0% |
+
+Result: 50%.
+
+## 6.3 Progress Rules
+
+1. Completed Task = 100%.
+2. Cancelled Task = Excluded from progress calculation.
+3. On Hold Task retains its current progress.
+4. Archived Task does not contribute to active Project progress.
+5. A parent Task with children derives its progress from children.
+6. A parent Task must not count both its own completion and its children independently.
+7. A Task without children can use its own Checklist or Manual Progress.
+8. Checklist-based progress must be configurable.
+9. Empty Tasks must not produce division-by-zero errors.
+10. Zero-weight Tasks must be handled safely.
+11. Progress must always remain between 0 and 100.
+12. Progress changes must be recorded.
+13. Calculations must be deterministic and testable.
+
+## 6.4 Dashboard Progress
+
+Project progress and Dashboard progress are separate calculations.
+
+For Dashboard overall progress:
+
+- Use active Projects.
+- Apply project-level weights.
+- Exclude archived and cancelled Projects.
+- Do not include completed Projects unless the user enables historical reporting.
+- Clearly define behavior when there are no active Projects.
+
+## 6.5 Progress History
+
+Every meaningful Progress change should produce a progress log.
+
+Store:
+
+- Previous Value.
+- New Value.
+- Reason.
+- Entity Type.
+- Entity ID.
+- Timestamp.
+- Source.
+
+Source values:
+
+- Automatic.
+- Manual.
+- Checklist.
+- Status Change.
+- System Recalculation.
+
+---
+
+# PART 7 — DATABASE DESIGN
+
+## 7.1 Main Tables
+
+1. projects
+2. categories
+3. tasks
+4. checklist_items
+5. comments
+6. progress_logs
+7. notes
+8. attachments
+9. tags
+10. task_tags
+11. dependencies
+12. reminders
+13. activity_logs
+14. backup_history
+15. app_settings
+
+Subtasks will use the self-referencing tasks table.
+
+## 7.2 Project Entity
+
+Fields:
+
+- id: String, Primary Key.
+- name: String, Required.
+- description: String.
+- categoryId: String?.
+- color: String.
+- icon: String.
+- status: String.
+- priority: String.
+- progressMode: String.
+- manualProgress: Double.
+- weight: Double.
+- startDate: Long?.
+- dueDate: Long?.
+- createdAt: Long.
+- updatedAt: Long.
+- archivedAt: Long?.
+
+## 7.3 Task Entity
+
+Fields:
+
+- id: String, Primary Key.
+- projectId: String.
+- parentTaskId: String?.
+- title: String.
+- description: String?.
+- status: String.
+- priority: String.
+- progressMode: String.
+- manualProgress: Double.
+- weight: Double.
+- startDate: Long?.
+- dueDate: Long?.
+- completedAt: Long?.
+- createdAt: Long.
+- updatedAt: Long.
+- archivedAt: Long?.
+- sortOrder: Int.
+
+## 7.4 Checklist Entity
+
+- id.
+- taskId.
+- title.
+- isCompleted.
+- sortOrder.
+- createdAt.
+- completedAt.
+
+## 7.5 Comment Entity
+
+- id.
+- taskId.
+- content.
+- createdAt.
+- updatedAt.
+- deletedAt.
+
+## 7.6 Progress Log Entity
+
+- id.
+- projectId.
+- taskId.
+- oldProgress.
+- newProgress.
+- updateNote.
+- source.
+- createdAt.
+
+## 7.7 Other Entities
+
+### Categories
+
+id, name, color, icon, createdAt.
+
+### Notes
+
+id, projectId, taskId, title, content, createdAt, updatedAt, archivedAt.
+
+### Attachments
+
+id, projectId, taskId, localUri, fileName, mimeType, fileSize, createdAt.
+
+### Tags
+
+id, name, color.
+
+### TaskTags
+
+taskId, tagId.
+
+### Dependencies
+
+id, taskId, dependsOnTaskId, dependencyType.
+
+### Reminders
+
+id, taskId, triggerAt, repeatRule, enabled, createdAt.
+
+### ActivityLogs
+
+id, entityType, entityId, action, details, createdAt.
+
+### BackupHistory
+
+id, backupType, location, status, createdAt, sizeBytes.
+
+### AppSettings
+
+key, value, updatedAt.
+
+## 7.8 Database Rules
+
+- UUID identifiers.
+- Foreign Key Constraints.
+- Indexed projectId.
+- Indexed parentTaskId.
+- Indexed taskId.
+- Indexed dueDate.
+- Indexed status.
+- Indexed createdAt.
+- Database transactions.
+- Room migrations.
+- Explicit deletion policies.
+- Soft deletion where appropriate.
+- Database consistency validation.
+
+Do not rely on cascading deletion for important user data without explicit product approval.
+
+---
+
+# PART 8 — KANBAN BOARD
+
+Board Columns:
+
+1. Backlog.
+2. To Do.
+3. In Progress.
+4. On Hold.
+5. In Review.
+6. Completed.
+
+Features:
+
+- Drag and Drop.
+- Reorder.
+- Status Change.
+- Priority Indicators.
+- Due Date Indicators.
+- Project Filtering.
+- Quick Task Creation.
+
+Dragging a Task into a column must update its status and create an activity log.
+
+Completed Tasks should record completion time.
+
+Reopening a completed Task should clear its current completion state and preserve the previous completion event in history.
+
+---
+
+# PART 9 — CALENDAR AND DEADLINES
+
+Calendar Views:
+
+- Month.
+- Week.
+- Day.
+- Agenda.
+
+Show:
+
+- Task Deadlines.
+- Project Deadlines.
+- Start Dates.
+- Reminders.
+- Overdue Tasks.
+
+Requirements:
+
+- Local timezone display.
+- Correct daylight-saving handling where applicable.
+- All-day event support.
+- Rescheduling.
+- Repeat Reminders.
+- Notification Permission Handling.
+- WorkManager-based scheduling.
+- Reconciliation after device reboot and app updates.
+
+A notification must never be treated as the source of truth for a deadline. Database data is authoritative.
+
+---
+
+# PART 10 — NOTES AND ATTACHMENTS
+
+## 10.1 Notes
+
+Allow:
+
+- Project Notes.
+- Task Notes.
+- Standalone Notes.
+- Search.
+- Edit.
+- Archive.
+- Pin.
+
+## 10.2 Attachments
+
+Support common formats:
+
+- JPG.
+- PNG.
+- PDF.
+- TXT.
+- DOCX.
+- XLSX.
+- ZIP.
+
+Use Android Storage Access Framework for user-selected files.
+
+Store attachment metadata in Room and actual file data in managed storage or a user-selected location.
+
+Do not store large file contents directly inside SQLite.
+
+Handle missing or inaccessible files gracefully.
+
+---
+
+# PART 11 — GLOBAL SEARCH
+
+Search must work across:
+
+- Projects.
+- Tasks.
+- Subtasks.
+- Comments.
+- Notes.
+- Tags.
+
+Features:
+
+- Search Suggestions.
+- Recent Searches.
+- Search Filters.
+- Search by Status.
+- Search by Priority.
+- Search by Category.
+- Search by Date.
+- Clear Search History.
+
+Search should be responsive and work fully offline.
+
+Use indexed queries and consider SQLite FTS for larger datasets.
+
+---
+
+# PART 12 — ANALYTICS
+
+Provide the following reports:
+
+1. Overall Productivity.
+2. Project Progress.
+3. Weekly Task Completion.
+4. Monthly Task Completion.
+5. Pending Tasks.
+6. Overdue Tasks.
+7. Priority Distribution.
+8. Category Distribution.
+9. Completion Trends.
+10. Project Comparison.
+
+Analytics must use actual stored data.
+
+Do not generate artificial productivity values.
+
+Provide useful empty states when the user has insufficient history.
+
+---
+
+# PART 13 — OFFLINE-FIRST ARCHITECTURE
+
+## 13.1 Core Rule
+
+Room Database is the Single Source of Truth.
+
+Every Create, Update, Delete and Progress operation must be persisted locally.
+
+UI observes database-backed Flows.
+
+Internet connectivity must not be required for:
+
+- Project Management.
+- Task Management.
+- Checklists.
+- Comments.
+- Progress.
+- Notes.
+- Calendar.
+- Analytics.
+- Search.
+- Local Backup.
+- Local Restore.
+
+## 13.2 Offline Requirements
+
+- App launches without Internet.
+- No forced login.
+- No network dependency for core operations.
+- All local changes are retained.
+- App process recreation does not lose saved work.
+- Offline error handling is clear.
+- No silent data loss.
+
+---
+
+# PART 14 — BACKUP AND RESTORE
+
+## 14.1 Local Backup
+
+Support:
+
+- JSON Export.
+- ZIP Export.
+- Database Backup where technically safe.
+- Attachments Export.
+- User-Selected Backup Folder.
+- Manual Backup.
+- Scheduled Backup.
+
+## 14.2 Backup File Structure
+
+Suggested structure:
+
+```text
+MyWorkspace_Backup/
+│
+├── manifest.json
+├── database.json
+├── attachments/
+│   ├── file_001
+│   ├── file_002
+│   └── file_003
+│
+└── metadata/
+    └── backup_info.json
+```
+
+The JSON backup must include a schema version and application version.
+
+Use a documented backup format.
+
+Validate all records and relationships before restoring.
+
+## 14.3 Google Drive Backup
+
+Implement Google authentication using supported Android Google Identity and Drive integration methods.
+
+Support:
+
+- Account Selection.
+- Authentication.
+- Upload Backup.
+- Download Backup.
+- Backup History.
+- Restore.
+- Version Management.
+
+Provide separate backup modes:
+
+A. Private App Backup.
+
+B. User-Selected Drive Folder.
+
+The user must understand where the backup is stored.
+
+Never assume that a local backup is automatically synchronized with Drive.
+
+## 14.4 Backup Safety
+
+Before Restore:
+
+1. Validate Manifest.
+2. Validate Schema Version.
+3. Validate Backup Integrity.
+4. Validate Attachment References.
+5. Show Backup Information.
+6. Offer Current Database Backup.
+7. Ask for Confirmation.
+8. Restore Transactionally.
+9. Verify Record Counts and Relationships.
+10. Show Final Result.
+
+Never silently overwrite existing data.
+
+If restore fails, preserve the previous usable database.
+
+---
+
+# PART 15 — SECURITY AND PRIVACY
+
+Features:
+
+- Optional PIN Lock.
+- Optional Biometric Lock.
+- Secure Local File Handling.
+- No Mandatory Account.
+- No Unnecessary Data Collection.
+- Safe Backup Handling.
+- Clear Permissions.
+- Secure Google Authentication.
+
+Use Android Keystore for protecting sensitive local cryptographic material where needed.
+
+If backups contain sensitive data, support encryption with a properly managed user-held key or password.
+
+Never hardcode API secrets, client secrets or passwords into source code.
+
+Never log private user content in production logs.
+
+---
+
+# PART 16 — PREMIUM DESIGN SYSTEM
+
+## 16.1 Visual Style
+
+Premium Modern Productivity UI.
+
+Design principles:
+
+- Clean.
+- Minimal.
+- Professional.
+- High Contrast.
+- Smooth.
+- Consistent.
+- Easy to Navigate.
+
+## 16.2 Themes
+
+1. Dark.
+2. Light.
+3. AMOLED Black.
+
+## 16.3 Design Tokens
+
+Suggested initial values:
+
+- Primary Accent: Electric Blue.
+- Secondary Accent: Violet.
+- Success: Green.
+- Warning: Amber.
+- Error: Red.
+- Card Radius: 16–20dp.
+- Button Radius: 12–16dp.
+- Standard Spacing: 4dp Grid.
+- Touch Target: At least 48dp.
+- Consistent Typography Scale.
+
+Use Material 3 components and customize them consistently.
+
+## 16.4 UI States
+
+Every Screen must support:
+
+- Loading.
+- Empty.
+- Success.
+- Error.
+- Offline.
+- Permission Denied.
+- Data Unavailable.
+
+Do not leave empty blank screens.
+
+## 16.5 Accessibility
+
+- Content Descriptions.
+- Proper Touch Targets.
+- Dynamic Font Scaling.
+- Contrast.
+- Screen Reader Support.
+- Keyboard Navigation where appropriate.
+
+---
+
+# PART 17 — SETTINGS
+
+Settings must include:
+
+### Appearance
+
+- Theme.
+- Accent Color.
+- Compact / Comfortable Layout.
+- Animation Preferences.
+
+### Productivity
+
+- Default Task Priority.
+- Default Project View.
+- Default Progress Mode.
+- Start of Week.
+- Date Format.
+- Time Format.
+
+### Notifications
+
+- Task Reminders.
+- Deadline Reminders.
+- Daily Summary.
+- Overdue Alerts.
+
+### Backup
+
+- Local Backup.
+- Google Drive.
+- Backup Frequency.
+- Restore.
+- Export.
+
+### Security
+
+- App Lock.
+- PIN.
+- Biometric Authentication.
+
+### Storage
+
+- Database Size.
+- Attachment Size.
+- Cache Information.
+- Backup Storage.
+
+### About
+
+- App Version.
+- Privacy Policy.
+- Open Source Licenses.
+- Developer Information.
+
+---
+
+# PART 18 — PERFORMANCE REQUIREMENTS
+
+The application should remain responsive with:
+
+- 100+ Projects.
+- 10,000+ Tasks.
+- 50,000+ Checklist Items.
+- Large Comment Histories.
+- Multiple Attachments.
+
+These are design and test targets, not guaranteed device-independent limits.
+
+Requirements:
+
+- Pagination or Lazy Lists.
+- Efficient Database Queries.
+- Indexed Search.
+- Background Processing.
+- No Heavy Main-Thread Operations.
+- Stable Memory Usage.
+- Avoid Unnecessary Recompositions.
+- Proper Image Loading.
+- Transactional Writes.
+
+---
+
+# PART 19 — ERROR HANDLING
+
+Provide meaningful error messages for:
+
+- Database Failure.
+- Backup Failure.
+- Restore Failure.
+- Permission Denied.
+- Google Authentication Failure.
+- Drive Upload Failure.
+- Missing Attachments.
+- Invalid Task Relationships.
+- Invalid Progress Values.
+- Notification Scheduling Failure.
+
+Never silently ignore important failures.
+
+Use structured logging during development.
+
+Remove or redact sensitive details in production logs.
+
+---
+
+# PART 20 — TESTING STRATEGY
+
+## 20.1 Unit Tests
+
+Test:
+
+- Progress Calculation.
+- Weighted Progress.
+- Task Status Transitions.
+- Parent-Child Relationships.
+- Checklist Calculation.
+- Dependency Validation.
+- Backup Serialization.
+- Restore Validation.
+- Date Calculations.
+
+## 20.2 Database Tests
+
+Test:
+
+- CRUD Operations.
+- Foreign Keys.
+- Transactions.
+- Migrations.
+- Duplicate Prevention.
+- Soft Delete.
+- Archive.
+- Restore.
+
+## 20.3 UI Tests
+
+Test:
+
+- Dashboard.
+- Project Creation.
+- Task Creation.
+- Checklist Completion.
+- Comment Creation.
+- Progress Updates.
+- Calendar.
+- Backup Settings.
+
+## 20.4 Real Device Tests
+
+Test:
+
+- Airplane Mode.
+- App Force Stop.
+- App Process Recreation.
+- Device Restart.
+- Low Storage.
+- Notification Permission Denied.
+- Google Account Unavailable.
+- Large Database.
+- Restore After Reinstallation.
+
+---
+
+# PART 21 — DEVELOPMENT PHASES
+
+Development must follow this sequence.
+
+## PHASE 1 — Foundation and UI
+
+Tasks:
+
+- Create Android Studio Project.
+- Configure Gradle.
+- Configure Kotlin and Compose.
+- Setup Material 3.
+- Setup Navigation.
+- Setup Theme.
+- Create Main Dashboard.
+- Create Bottom Navigation.
+- Create Reusable Components.
+- Create Empty States.
+
+Deliverable: Initial Buildable APK.
+
+## PHASE 2 — Database and Projects
+
+Tasks:
+
+- Setup Room.
+- Create Entities.
+- Create DAOs.
+- Create Repositories.
+- Create Project Use Cases.
+- Create Category Management.
+- Create Project CRUD.
+- Create Project Details.
+- Create Archive.
+- Test Local Persistence.
+
+Deliverable: Working Project Management.
+
+## PHASE 3 — Tasks and Progress
+
+Tasks:
+
+- Create Task Management.
+- Create Subtasks.
+- Create Checklists.
+- Create Comments.
+- Create Progress Logs.
+- Implement Automatic Progress.
+- Implement Manual Progress.
+- Implement Weighted Progress.
+- Implement Kanban.
+- Implement Activity Logs.
+
+Deliverable: Complete Task Tracking.
+
+## PHASE 4 — Productivity Features
+
+Tasks:
+
+- Calendar.
+- Reminders.
+- Notifications.
+- Notes.
+- Attachments.
+- Search.
+- Analytics.
+- Filters.
+- Sorting.
+
+Deliverable: Complete Productivity Experience.
+
+## PHASE 5 — Backup and Security
+
+Tasks:
+
+- JSON Export.
+- ZIP Backup.
+- Restore Validation.
+- Local Backup Scheduling.
+- Google Drive Authentication.
+- Drive Upload.
+- Drive Restore.
+- PIN Lock.
+- Biometric Lock.
+
+Deliverable: Backup-Ready Application.
+
+## PHASE 6 — Testing and Release
+
+Tasks:
+
+- Unit Testing.
+- UI Testing.
+- Database Testing.
+- Offline Testing.
+- Backup Testing.
+- Performance Testing.
+- Accessibility Review.
+- Final UI Polish.
+- APK Build.
+- AAB Build.
+- Release Checklist.
+
+Deliverable: Release Candidate.
+
+---
+
+# PART 22 — FUTURE VERSION 2
+
+The following features are deliberately outside the initial V1 scope.
+
+## AI Productivity Assistant
+
+- Convert Natural Language into Tasks.
+- Generate Project Checklists.
+- Summarize Comments.
+- Generate Progress Reports.
+- Suggest Next Actions.
+
+## Cloud Synchronization
+
+- Multiple Devices.
+- Conflict Resolution.
+- Data Synchronization.
+- Offline Change Queue.
+
+## Team Collaboration
+
+- Multiple Users.
+- Shared Projects.
+- Task Assignment.
+- Team Comments.
+- Permissions.
+- Roles.
+
+These features must be added only after the V1 local architecture is stable.
+
+---
+
+# PART 23 — DEVELOPMENT RULES FOR ANDROID STUDIO AI ASSISTANT
+
+These instructions are mandatory throughout development.
+
+## Rule 1 — Read Before Editing
+
+Before changing any existing file:
+
+- Inspect the existing project.
+- Understand the current architecture.
+- Identify dependencies.
+- Review related classes.
+- Check existing tests.
+- Understand the impact of the change.
+
+Never blindly overwrite existing files.
+
+## Rule 2 — Build Incrementally
+
+Do not generate the entire application in one enormous unverified code dump.
+
+Implement one logical module at a time.
+
+Build after every major implementation stage.
+
+## Rule 3 — Preserve Existing Functionality
+
+When implementing new features:
+
+- Do not remove existing working functionality.
+- Do not rename public classes unnecessarily.
+- Do not replace working architecture without a documented reason.
+- Do not remove database migrations.
+- Do not reset the database during ordinary updates.
+- Do not introduce duplicate implementations.
+
+## Rule 4 — No Fake Functionality
+
+Never create buttons that appear functional but do nothing.
+
+Never use hardcoded fake statistics in the actual application.
+
+Never simulate successful backup or restore.
+
+Never display fabricated progress.
+
+If a feature is not implemented, mark it clearly as Pending or Not Yet Available.
+
+## Rule 5 — Compile and Verify
+
+After each major module:
+
+1. Sync Gradle.
+2. Compile.
+3. Run Unit Tests.
+4. Run Relevant UI Tests.
+5. Inspect Build Output.
+6. Fix Errors.
+7. Verify Existing Features.
+8. Report Results.
+
+## Rule 6 — Database Safety
+
+Any schema modification requires a proper Room Migration.
+
+Never use destructive database migration in production.
+
+Never discard user data to solve a migration issue.
+
+## Rule 7 — Progress Accuracy
+
+Progress calculation must be implemented in the Domain Layer.
+
+All calculations must have Unit Tests.
+
+No inconsistent Progress values are allowed.
+
+## Rule 8 — Documentation
+
+Maintain:
+
+- README.md.
+- ARCHITECTURE.md.
+- DATABASE_SCHEMA.md.
+- DEVELOPMENT_STATUS.md.
+- CHANGELOG.md.
+- TESTING.md.
+
+Update relevant documentation after every completed phase.
+
+## Rule 9 — Code Quality
+
+- No unnecessary code duplication.
+- No unexplained magic numbers.
+- No unused dependencies.
+- No unresolved TODOs in completed modules.
+- No ignored critical exceptions.
+- No hardcoded secrets.
+- No unnecessary network permissions.
+
+## Rule 10 — Honest Reporting
+
+At the end of each development task, report:
+
+- Files Created.
+- Files Modified.
+- Features Completed.
+- Build Status.
+- Tests Passed.
+- Tests Failed.
+- Known Issues.
+- Next Recommended Step.
+
+Never claim successful implementation without verification.
+
+---
+
+# PART 24 — MASTER ACCEPTANCE CRITERIA
+
+V1 is ready only when:
+
+1. Project CRUD works.
+2. Categories work.
+3. Tasks work.
+4. Nested Subtasks work.
+5. Checklists work.
+6. Comments work.
+7. Progress History works.
+8. Automatic Progress works.
+9. Manual Progress works.
+10. Weighted Progress works.
+11. Kanban works.
+12. Calendar works.
+13. Reminders work.
+14. Notes work.
+15. Attachments work.
+16. Global Search works.
+17. Analytics uses real data.
+18. Offline functionality works.
+19. Local Backup works.
+20. Local Restore works.
+21. Google Drive Backup works.
+22. Google Drive Restore works.
+23. Data remains safe across app restarts.
+24. Database migrations work.
+25. Release APK builds successfully.
+
+---
+
+# PART 25 — FIRST DEVELOPMENT SESSION
+
+## Initial Android Studio Setup
+
+1. Open Android Studio.
+2. Create a New Project.
+3. Select Empty Activity.
+4. Name: My Workspace.
+5. Package: com.myworkspace.app.
+6. Language: Kotlin.
+7. Minimum SDK: API 26.
+8. Enable Jetpack Compose.
+9. Finish project creation.
+10. Wait for Gradle Sync.
+
+## Initial Development Task
+
+The first implementation task is:
+
+**PHASE 1 — FOUNDATION AND UI**
+
+The Android Studio AI Assistant must:
+
+1. Inspect the generated Android Studio project.
+2. Review the Gradle configuration.
+3. Verify Kotlin and Compose setup.
+4. Create the package architecture.
+5. Configure Material 3.
+6. Implement the Theme System.
+7. Implement Main Navigation.
+8. Implement Bottom Navigation.
+9. Create Dashboard UI.
+10. Create Reusable UI Components.
+11. Implement Dark Theme.
+12. Implement Light Theme.
+13. Implement AMOLED Theme.
+14. Add Preview Composables.
+15. Build the application.
+16. Resolve all compilation errors.
+17. Run the application on an emulator or device.
+18. Update DEVELOPMENT_STATUS.md.
+
+Do not start Phase 2 until Phase 1 builds successfully and its basic navigation is verified.
+
+---
+
+# FINAL PRODUCT PRINCIPLE
+
+My Workspace must be:
+
+- Premium.
+- Reliable.
+- Offline-First.
+- Data-Safe.
+- Fast.
+- Scalable.
+- Easy to Use.
+- Maintainable.
+- Future-Ready.
+
+**The most important requirement:**
+
+A user should be able to leave a Project for 30 days, open My Workspace again, and immediately understand:
+
+- What was completed?
+- What is pending?
+- Where did the work stop?
+- What was the last progress update?
+- What is the next action?
+- How much work is remaining?
+
+This is the real purpose of My Workspace.
+
+**END OF MASTER DEVELOPER HANDBOOK — VERSION 1.0**

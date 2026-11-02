@@ -1,0 +1,6 @@
+{
+  "name": "My Workspace",
+  "description": "Personal AI Assistant with Task Management, Project Dependencies, Chat, and Offline Command Engine",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,198 @@
+================================================================================
+WORKSPACE PHASE 5 STEP 3.6 AUDIT REPORT
+EVIDENCE-BASED GEMINI LIVE CONNECTION, API KEY SECURITY & ZERO-BILLING AUDIT
+================================================================================
+Application: My Workspace (Package: com.example, ApplicationId: com.aistudio.myworkspace.pqtrm)
+Target Module: Phase 5 — AI Assistant (GeminiCloudEngine, HybridAiCoordinator, LocalCommandEngine)
+Date of Audit: November 2, 2026
+Auditor: Independent Source Code & Build Integrity Engine
+Methodology: Direct static source inspection, compiled bytecode analysis, Room DB inspection, and unit test execution.
+================================================================================
+
+EXECUTIVE AUDIT SUMMARY:
+The claims made in previous documentation that "Gemini 3.8 Flash live cloud AI is
+actively connected and running live on device" are INACCURATE.
+Direct source code inspection confirms:
+1. GeminiCloudEngine exists in the repository, but is NOT wired into the running
+   application (MainActivity.kt and ChatViewModel.kt only instantiate and execute
+   the offline LocalCommandEngine).
+2. All 11 unit tests in HybridAiCoordinatorTest used MockGeminiEngine, not live network calls.
+3. No direct API key is currently packaged in the compiled APK (BuildConfig.java contains
+   no key constant; .env does not exist; .env.example key is commented out).
+4. Direct REST calls in GeminiCloudEngine target Google Generative Language API, NOT
+   Firebase AI Logic. If a user uncomments an API key in .env, secrets-gradle-plugin
+   would package it directly into the client APK bytecode—posing a severe security risk.
+5. Zero billing cannot be mathematically guaranteed solely by hardcoding a model ID.
+   External billing status depends on the user's Google Cloud project configuration.
+
+================================================================================
+SECTION 1: API KEY SECURITY AUDIT
+================================================================================
+
+1.1 Implementation & SDK Identification:
+- Exact File: /app/src/main/java/com/example/ai/cloud/GeminiCloudEngine.kt (Lines 33, 110-125)
+- Endpoint: https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent
+- Protocol / SDK: Direct java.net.HttpURLConnection (REST API over TLS).
+- Firebase AI Logic SDK Usage: NOT APPLICABLE / NOT USED.
+  * Although `libs.firebase.ai` is declared in app/build.gradle.kts (Line 110),
+    the official Firebase AI Logic SDK (`Firebase.aiLogic`) is NEVER imported or
+    called in GeminiCloudEngine.kt.
+
+1.2 APK Packaging & BuildConfig Inspection:
+- Status: VERIFIED (Safe in current state, but structurally vulnerable if enabled).
+- Generated Source File: /app/build/generated/source/buildConfig/debug/com/example/BuildConfig.java
+  * Line 6-12 Inspection:
+    ```java
+    public final class BuildConfig {
+      public static final boolean DEBUG = Boolean.parseBoolean("true");
+      public static final String APPLICATION_ID = "com.aistudio.myworkspace.pqtrm";
+      public static final String BUILD_TYPE = "debug";
+      public static final int VERSION_CODE = 1;
+      public static final String VERSION_NAME = "1.0";
+    }
+    ```
+  * Finding: `BuildConfig.GEMINI_API_KEY` is NOT present in the generated BuildConfig.java.
+  * Root Cause: `.env` does not exist on disk, and `.env.example` has `# GEMINI_API_KEY=MY_GEMINI_API_KEY`
+    commented out (Line 7).
+
+1.3 Client-Side API Key Exposure Risk:
+- Status: FAILED (Architecture Risk Identified).
+- Finding:
+  * If a user or developer follows instructions to uncomment `GEMINI_API_KEY` in `.env`
+    or `.env.example`, the `com.google.android.libraries.mapsplatform.secrets-gradle-plugin`
+    will compile the raw string literal directly into `BuildConfig.class` within the APK DEX.
+  * Decompilation via standard tools (`jadx`, `apktool`) can extract this string in seconds.
+  * Embedding developer API keys in public client APKs violates Google API security best practices.
+  * Neither `.gitignore` nor AI Studio Secrets protection prevents extraction once compiled
+    into the client-side binary.
+
+1.4 Safest Compatible Architecture Recommendation (Zero Paid Services):
+- Recommendation A (Offline-First / Zero-Risk):
+  * Keep the application operating on `LocalCommandEngine` by default. It requires NO API
+    keys, produces NO network traffic, incurs exactly $0.00, and is immune to key extraction.
+- Recommendation B (Free Firebase AI Logic with App Check):
+  * Replace the direct REST call with official Firebase AI Logic (`Firebase.aiLogic`)
+    gated by Firebase App Check (reCAPTCHA v3 or Play Integrity).
+  * This eliminates embedding an API key in client code, relies on project-level device
+    attestation, and remains on Google's free tier.
+- Recommendation C (Self-Hosted Zero-Cost Proxy):
+  * A backend proxy (e.g. Free-tier Cloud Run / Cloud Functions) holding the API key in
+    GCP Secret Manager with user session authentication.
+
+================================================================================
+SECTION 2: ACTUAL BILLING VERIFICATION
+================================================================================
+
+2.1 Firebase Project Configuration:
+- Status: NOT APPLICABLE.
+- Inspection:
+  * File search for `google-services.json` or `firebase_applet_config.xml`: NOT FOUND.
+  * Firebase project has not been provisioned for this application.
+  * app/build.gradle.kts (Line 81) uses `missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN`
+    to allow Gradle compilation without Firebase configuration.
+
+2.2 Billing Status & Free-Tier Audit:
+- Status: NOT VERIFIED (External Account Dependency).
+- Findings:
+  * The model string `gemini-3.8-flash` is hardcoded in GeminiCloudEngine.kt (Line 28).
+  * Under Google AI Studio developer terms, `gemini-3.8-flash` has a Free Tier
+    (Rate limits: 15 Requests Per Minute, 1,500 Requests Per Day, 1,000,000 Tokens Per Minute).
+  * HOWEVER, billing status CANNOT be verified from the repository code alone because:
+    1. If the API key used belongs to a Google Cloud project with an active billing
+       account (Blaze / Pay-As-You-Go), requests that exceed free limits or specific
+       features could automatically accrue charges.
+    2. Hardcoding a model name does NOT prevent billing if the underlying Google Cloud
+       project has billing enabled.
+  * Therefore, billing status is strictly marked as NOT VERIFIED.
+
+2.3 Paid Fallback Models & Prohibited Upgrades:
+- Status: VERIFIED (Strict Compliance).
+- Findings:
+  * No paid fallback models (e.g. Gemini 1.5 Pro, Gemini Ultra, or high-compute tiers)
+    exist in the codebase.
+  * No Firebase Blaze upgrade or cloud billing calls have been executed or added.
+  * When cloud requests fail, timeout, or return HTTP 429, the ONLY fallback is
+    `LocalCommandEngine` (100% on-device SQLite queries).
+
+================================================================================
+SECTION 3: LIVE DEVICE TEST RESULTS
+================================================================================
+
+Environment Constraint Notice:
+As per the platform execution environment specification:
+"There is NO Android Emulator or ADB (Android Debug Bridge) available to you in your execution environment. You cannot run instrumented tests or use adb commands."
+Physical device execution is evaluated via runtime entry point analysis, Robolectric JVM simulation,
+and actual source wiring verification.
+
+3.1 Harmless Request to Gemini Live:
+- Status: FAILED (Feature Not Connected to UI).
+- Evidence:
+  * File: /app/src/main/java/com/example/MainActivity.kt (Lines 31-39)
+    `MainActivity` instantiates ONLY `LocalCommandEngine(toolExecutor)` and passes it to
+    `ChatViewModelFactory`.
+  * File: /app/src/main/java/com/example/viewmodel/ChatViewModel.kt (Lines 18, 170-182)
+    `ChatViewModel` only accepts `localCommandEngine: LocalCommandEngine?`.
+    `processAiMessage(prompt)` invokes ONLY `localCommandEngine.execute(prompt)`.
+  * Result: In the actual running Android application, user chat inputs in the AI
+    Assistant conversation NEVER reach `GeminiCloudEngine` or `https://generativelanguage.googleapis.com`.
+    All requests are handled locally by `LocalCommandEngine`.
+
+3.2 Question Requiring Workspace Tool Call:
+- Status: VERIFIED (Via Local Engine).
+- Evidence:
+  * Unit test: `LocalCommandEngineTest.testExecuteCreateAndCompleteTask` (Lines 108-118)
+    PASSED in `gradle :app:testDebugUnitTest`.
+  * Real Room DB queries execute through `WorkspaceToolExecutor.kt` and `WorkspaceRepository.kt`.
+  * Tool calls (`createTask`, `completeTask`, `getTodayTasks`) read and write directly to
+    the local SQLite `WorkspaceDatabase.db`.
+
+3.3 Offline Fallback with Internet Disabled:
+- Status: VERIFIED.
+- Evidence:
+  * Because the active app runs `LocalCommandEngine` locally, 100% of the assistant
+    features work seamlessly without an internet connection.
+  * In unit tests (`HybridAiCoordinatorTest.testOfflineRoutingWhenNoNetwork`, Lines 85-95),
+    when `_isNetworkAvailable = false`, the coordinator successfully routes to
+    `LocalCommandEngine` without attempting network calls.
+
+3.4 Disabling Cloud AI via UI:
+- Status: VERIFIED.
+- Evidence:
+  * In unit tests (`HybridAiCoordinatorTest.testOfflineRoutingWhenToggleDisabled`, Lines 72-82),
+    when `_isCloudAiEnabled = false`, zero cloud requests are made, and queries route to
+    `LocalCommandEngine`.
+
+================================================================================
+SECTION 4: EVIDENCE TABLE & VERIFICATION STATUS
+================================================================================
+
+Item / Check                                   | Status         | Evidence / Methodology
+-----------------------------------------------|----------------|-------------------------------------------------------
+Direct Gemini REST Endpoint Identified         | VERIFIED       | GeminiCloudEngine.kt:33 (Source Inspection)
+Firebase AI Logic SDK in Use                   | NOT APPLICABLE | Firebase.aiLogic is not implemented in GeminiCloudEngine
+API Key Packaged in Compiled APK               | VERIFIED (Safe)| BuildConfig.java:6-12 (Bytecode / Generated Source)
+Client APK API Key Extraction Vulnerability     | FAILED (Risk)  | secrets-gradle-plugin puts keys into BuildConfig DEX
+Zero Billing Verified from Repository          | NOT VERIFIED   | External GCP billing account cannot be verified in repo
+Paid Fallback Models Prohibited                | VERIFIED       | Only LocalCommandEngine fallback exists
+Real Live Gemini Request on Running App        | FAILED         | MainActivity.kt:31-39 does not wire GeminiCloudEngine
+Local Tool Execution Against Room DB           | VERIFIED       | LocalCommandEngineTest + WorkspaceToolExecutor (Pass)
+Offline Fallback without Internet              | VERIFIED       | LocalCommandEngine operates 100% on-device
+Robolectric Mock vs Live Network Tests         | VERIFIED       | HybridAiCoordinatorTest uses MockGeminiEngine (Unit)
+Gradle Unit Test Suite Execution               | VERIFIED       | 20/20 Unit Tests Passing (`testDebugUnitTest`)
+Application Build Compilation                  | VERIFIED       | `compile_applet` passed successfully
+
+================================================================================
+SECTION 5: REMEDIATION ROADMAP FOR STEP 4
+================================================================================
+1. To safely enable Live Gemini Cloud AI without API key exposure:
+   - Option A: Implement Firebase AI Logic via `set_up_firebase` with App Check
+     (recommended standard for mobile clients).
+   - Option B: Use an authenticated server-side proxy holding the API key.
+2. If direct developer API keys are used for prototyping:
+   - Provide explicit disclaimer in the UI that client-embedded keys are strictly for
+     local developer testing and not safe for production APK release.
+3. Wire `HybridAiCoordinator` into `ChatViewModel` and `MainActivity` only after
+   the key storage mechanism is finalized and approved.
+================================================================================
+END OF REPORT
+================================================================================

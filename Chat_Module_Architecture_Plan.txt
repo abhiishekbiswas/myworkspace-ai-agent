@@ -1,0 +1,368 @@
+================================================================================
+MY WORKSPACE — PHASE 4: CHAT MODULE ARCHITECTURE & IMPLEMENTATION PLAN
+Document: Chat_Module_Architecture_Plan.txt
+Timestamp: 2026-11-01T11:28:00-08:00
+Status: STEP 1 — ARCHITECTURE & IMPLEMENTATION PLAN ONLY (NO SOURCE CODE MODIFIED)
+================================================================================
+
+1. EXECUTIVE OVERVIEW & OBJECTIVES
+--------------------------------------------------------------------------------
+Phase 4 introduces a modern, WhatsApp-inspired local messaging and team
+collaboration module into the "My Workspace" Android productivity platform.
+
+Key Tenets:
+1. Distinct Original Identity:
+   - Inspired by the fluid interaction patterns of WhatsApp (conversation lists,
+     message bubbles, delivery ticks, quote replies, attachment menus).
+   - Styled strictly in the "My Workspace" design language: Electric Blue and
+     Royal Violet accents, Slate Surface dark surfaces, AMOLED black compatibility,
+     modern typography, and rounded Material 3 cards.
+   - Absolutely no WhatsApp branding, green logos, or copyright infringements.
+2. Complete Offline-First & Local Persistence:
+   - Local Room SQLite database serves as the single source of truth.
+   - Works 100% offline with zero external network or server dependencies.
+   - Transparently framed as local workspace collaboration without claiming
+     simulated messages are live online network transmissions.
+3. Strict Preservation of Existing Modules:
+   - Zero breaking changes to Phase 1 (UI & Theming), Phase 2 (Core Storage),
+     or Phase 3 (Task Dependencies, Hierarchies, Progress Engine).
+   - Database migrated from version 3 to 4 with non-destructive table additions.
+
+
+2. EXISTING ARCHITECTURE AUDIT & FINDINGS
+--------------------------------------------------------------------------------
+• Architecture Pattern: MVVM + Clean Architecture + Repository Pattern.
+• Language & UI: 100% Kotlin + Jetpack Compose (Material 3).
+• Dependency Injection: Constructor Injection + ViewModelFactory (`WorkspaceViewModelFactory`).
+• Single Activity: `MainActivity.kt` with `enableEdgeToEdge()` and centralized theme.
+• Navigation:
+  - `Screen.kt` defines sealed class routes.
+  - `Navigation.kt` hosts `MainNavigation` with a 5-item Bottom Bar (`Home`, `Projects`,
+    `Tasks`, `Calendar`, `More`).
+  - Secondary screens (`ProjectDetail`, `TaskDetail`, `Kanban`, `Analytics`, `Notes`,
+    `Search`, `Backup`, `Settings`) are stacked inside `NavHost`.
+• Current Room Database:
+  - File: `/app/src/main/java/com/example/data/local/database/WorkspaceDatabase.kt`
+  - Current Version: **3**
+  - Existing Tables (9): `categories`, `projects`, `tasks`, `checklist_items`,
+    `comments`, `progress_logs`, `notes`, `activity_logs`, `task_dependencies`.
+  - Type Converters: `DatabaseConverters.kt` (Date, List<String>, Map).
+• Current ViewModel:
+  - `WorkspaceViewModel.kt`: Centralized reactive state flows (`allTasks`, `activeProjects`,
+    `blockedTaskIds`, `dashboardStats`, `themeMode`).
+
+
+3. PROPOSED CHAT MODULE ARCHITECTURE
+--------------------------------------------------------------------------------
+The Chat Module will follow a modular Clean Architecture pattern alongside the
+existing codebase:
+
+`com.example`
+  ├── `core/database/dao/`
+  │     └── `ChatDao.kt`
+  ├── `data/local/entity/`
+  │     └── `ChatEntities.kt` (ConversationEntity, ChatMessageEntity, MessageAttachmentEntity, ContactEntity)
+  ├── `domain/model/`
+  │     └── `ChatModels.kt` (Domain representations, MessageStatus, MessageType)
+  ├── `domain/repository/`
+  │     └── `IChatRepository.kt`
+  ├── `data/repository/`
+  │     └── `ChatRepository.kt`
+  ├── `viewmodel/`
+  │     ├── `ChatViewModel.kt`
+  │     └── `ChatViewModelFactory.kt`
+  └── `ui/screens/chat/`
+        ├── `ChatsScreen.kt` (Conversation list, filter chips, search, new chat)
+        ├── `ConversationScreen.kt` (Chat thread, bubbles, reply quote, composer)
+        ├── `ConversationDetailScreen.kt` (Participant info, media gallery, settings)
+        └── `components/`
+              ├── `MessageBubble.kt` (Incoming/outgoing bubble, ticks, attachments)
+              ├── `ChatInputBar.kt` (Text field, emoji, attachment menu, mic/send)
+              ├── `ConversationListItem.kt` (Avatar, name, snippet, badge, timestamp)
+              ├── `AttachmentPickerSheet.kt` (Photo picker, document, voice note)
+              └── `ReplyQuoteView.kt` (Quoted message preview bar)
+
+
+4. SCREEN-BY-SCREEN SPECIFICATION
+--------------------------------------------------------------------------------
+
+4.1 Chats Home Screen (`ChatsScreen.kt`)
+--------------------------------------------------------------------------------
+• Header:
+  - Title: "Messages" / "Workspace Chat".
+  - Search icon with inline expandable query bar.
+  - Quick action to filter unread conversations.
+• Filter Chips:
+  - "All", "Unread", "Pinned", "Direct", "Channels".
+• Conversation List (`LazyColumn`):
+  - Recipient / Channel avatar with online/workspace status dot.
+  - Name / Subject with bold font.
+  - Message preview snippet with message status prefix (e.g. checkmarks if sent by me).
+  - Relative timestamp ("Just now", "10:45 AM", "Yesterday", "Oct 28").
+  - Unread badge counter pill (Electric Blue container).
+  - Pinned conversation indicator (Pin icon) and Muted indicator (Mute icon).
+  - Swipe actions: Pin/Unpin, Mute/Unmute, Delete conversation.
+• Floating Action Button:
+  - "New Chat" FAB opening contact/colleague selector sheet with search.
+
+4.2 Individual Conversation Screen (`ConversationScreen.kt`)
+--------------------------------------------------------------------------------
+• Top App Bar:
+  - Back navigation arrow.
+  - Contact Avatar with status indicator (e.g. "Active in Workspace", "Offline").
+  - Title & Subtitle ("Sarah Jenkins • Product Designer").
+  - Actions: Search in conversation, Info / Details icon.
+• Message List (`LazyColumn`):
+  - Reverse layout / auto-scroll to bottom on message emission.
+  - Date Separator Pills: Sticky or centered pill badges ("Today", "Yesterday", "October 28, 2026").
+  - Outgoing Bubble:
+    * Background: `MaterialTheme.colorScheme.primaryContainer` (Deep Blue / Electric Tint).
+    * Text color: `MaterialTheme.colorScheme.onPrimaryContainer`.
+    * Aligned to End (Right).
+    * Corner radius: Asymmetric (e.g., 18.dp top-left, 18.dp top-right, 18.dp bottom-left, 4.dp bottom-right).
+    * Status Indicator: Single tick (Sent), Double gray tick (Delivered), Double Electric Blue tick (Read).
+    * Timestamp formatted to "hh:mm a".
+  - Incoming Bubble:
+    * Background: `MaterialTheme.colorScheme.surfaceVariant` (Slate Card).
+    * Text color: `MaterialTheme.colorScheme.onSurface`.
+    * Aligned to Start (Left).
+    * Corner radius: Asymmetric (18.dp top-left, 18.dp top-right, 4.dp bottom-left, 18.dp bottom-right).
+    * Timestamp formatted to "hh:mm a".
+  - Quoted Reply Banner:
+    * Rendered inside the bubble above message text with vertical accent bar.
+    * Displays original sender name and truncated text.
+  - Media & Document Attachments:
+    * Image attachment: Rounded thumbnail preview with tap to expand.
+    * Document attachment: File type icon, file name, file size badge.
+    * Audio / Voice Note: Play/Pause waveform player preview with duration.
+  - Long-Press Context Menu:
+    * Modal sheet or floating action row: Reply, Copy Text, Star Message, Delete for Me, Delete for Everyone.
+
+4.3 Message Composer (`ChatInputBar.kt`)
+--------------------------------------------------------------------------------
+• Quoted Message Preview Header:
+  - Displayed above the input bar when a message is selected for reply, with close ('X') button.
+• Composer Bar:
+  - Attachment Button ('+'): Opens bottom sheet for Camera/Photo Picker, Documents, Task Reference, Audio.
+  - Text Field: Rounded container with placeholder "Type a message...", multiline up to 5 lines.
+  - Emoji Button: Opens emoji keyboard helper.
+  - Dynamic Action Button:
+    * Displays Microphone icon when text field is empty (tap/hold for voice note recording simulation).
+    * Displays Send icon (Electric Blue circle) when text is non-empty.
+
+4.4 Conversation Details Screen (`ConversationDetailScreen.kt`)
+--------------------------------------------------------------------------------
+• Hero Profile Section: Large avatar, contact name, role/department, email, phone.
+• Quick Action Buttons: Message, Search, Mute, Starred Messages.
+• Shared Media, Links & Documents Section:
+  - Tabbed grid showing photos, files, and voice notes exchanged in this conversation.
+• Privacy & Notification Toggles:
+  - Mute notifications switch.
+  - Custom notification tones placeholder.
+• Danger Zone:
+  - Clear Chat History (with confirmation dialog).
+  - Delete Conversation (with confirmation dialog).
+
+
+5. DATABASE SCHEMA & MIGRATION PLAN (v3 -> v4)
+--------------------------------------------------------------------------------
+
+5.1 New Room Entities:
+
+1. `conversations` table (`ConversationEntity`):
+   - `id`: TEXT PRIMARY KEY (UUID)
+   - `title`: TEXT NOT NULL (Contact name or Channel title)
+   - `isGroup`: INTEGER NOT NULL (0 = Direct 1-on-1, 1 = Group/Channel)
+   - `avatarUrl`: TEXT NULL
+   - `avatarColor`: TEXT NOT NULL (Hex string for generated avatar fallback)
+   - `contactId`: TEXT NULL (Reference to contacts table)
+   - `isPinned`: INTEGER NOT NULL DEFAULT 0
+   - `isMuted`: INTEGER NOT NULL DEFAULT 0
+   - `unreadCount`: INTEGER NOT NULL DEFAULT 0
+   - `lastMessageId`: TEXT NULL
+   - `lastMessageText`: TEXT NULL
+   - `lastMessageTimestamp`: INTEGER NOT NULL
+   - `createdAt`: INTEGER NOT NULL
+   - `updatedAt`: INTEGER NOT NULL
+
+2. `chat_messages` table (`ChatMessageEntity`):
+   - `id`: TEXT PRIMARY KEY (UUID)
+   - `conversationId`: TEXT NOT NULL, FOREIGN KEY -> `conversations(id)` ON DELETE CASCADE
+   - `senderId`: TEXT NOT NULL ("me" or contactId)
+   - `senderName`: TEXT NOT NULL
+   - `text`: TEXT NOT NULL
+   - `messageType`: TEXT NOT NULL ("TEXT", "IMAGE", "DOCUMENT", "AUDIO", "VOICE_NOTE")
+   - `status`: TEXT NOT NULL ("SENDING", "SENT", "DELIVERED", "READ")
+   - `replyToMessageId`: TEXT NULL
+   - `replyToSenderName`: TEXT NULL
+   - `replyToText`: TEXT NULL
+   - `isStarred`: INTEGER NOT NULL DEFAULT 0
+   - `isDeletedForEveryone`: INTEGER NOT NULL DEFAULT 0
+   - `createdAt`: INTEGER NOT NULL
+   - `updatedAt`: INTEGER NOT NULL
+
+3. `message_attachments` table (`MessageAttachmentEntity`):
+   - `id`: TEXT PRIMARY KEY (UUID)
+   - `messageId`: TEXT NOT NULL, FOREIGN KEY -> `chat_messages(id)` ON DELETE CASCADE
+   - `fileName`: TEXT NOT NULL
+   - `fileUri`: TEXT NOT NULL
+   - `fileType`: TEXT NOT NULL ("image/jpeg", "application/pdf", etc.)
+   - `fileSizeBytes`: INTEGER NOT NULL
+   - `thumbnailUri`: TEXT NULL
+   - `durationMs`: INTEGER NULL (for voice/audio)
+   - `createdAt`: INTEGER NOT NULL
+
+4. `contacts` table (`ContactEntity`):
+   - `id`: TEXT PRIMARY KEY (UUID)
+   - `name`: TEXT NOT NULL
+   - `role`: TEXT NOT NULL
+   - `email`: TEXT NULL
+   - `avatarColor`: TEXT NOT NULL
+   - `initials`: TEXT NOT NULL
+   - `statusBio`: TEXT NOT NULL
+   - `isOnline`: INTEGER NOT NULL DEFAULT 0
+   - `lastSeenTimestamp`: INTEGER NOT NULL
+   - `createdAt`: INTEGER NOT NULL
+
+5.2 Database Indexes:
+• `index_chat_messages_conversationId` ON `chat_messages(conversationId)`
+• `index_chat_messages_createdAt` ON `chat_messages(createdAt)`
+• `index_conversations_lastMessageTimestamp` ON `conversations(lastMessageTimestamp)`
+• `index_conversations_isPinned` ON `conversations(isPinned)`
+• `index_message_attachments_messageId` ON `message_attachments(messageId)`
+
+5.3 Migration Plan (`MIGRATION_3_4`):
+• Safe SQLite DDL using `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`.
+• Increments `WorkspaceDatabase` version from `3` to `4`.
+• Default seed data injection for pre-populated workspace colleagues (e.g. Design Lead,
+  Engineering Lead, Project Manager) so the chat interface immediately displays
+  meaningful conversation threads upon launch.
+
+
+6. NAVIGATION INTEGRATION PLAN
+--------------------------------------------------------------------------------
+To seamlessly integrate Chat without breaking the existing 5 bottom navigation tabs
+(`Home`, `Projects`, `Tasks`, `Calendar`, `More`):
+
+1. Primary Ubiquitous Access Points:
+   - `AppTopBar.kt`: Add a Chat icon button with a live unread badge counter next to
+     the Notifications and Search icons on the Dashboard.
+   - `DashboardScreen.kt`: Add a "Workspace Messages" quick card previewing recent
+     chats and direct shortcut to start a chat.
+   - `MoreScreen.kt`: Add a "Team Chat & Collaboration" list item under Communications.
+
+2. Navigation Routes in `Screen.kt`:
+   - `object Chats : Screen("chats")`
+   - `object Conversation : Screen("conversation/{conversationId}") { fun createRoute(id: String) = "conversation/$id" }`
+   - `object ConversationDetail : Screen("conversation_detail/{conversationId}") { fun createRoute(id: String) = "conversation_detail/$id" }`
+
+3. Bottom Bar Behavior:
+   - `ChatsScreen` can optionally hide the bottom bar or retain it depending on whether
+     navigated from bottom nav or top bar. When entering an individual `ConversationScreen`,
+     the bottom bar is hidden to maximize screen real estate for the message thread and composer.
+
+
+7. FILE-CHANGE INVENTORY
+--------------------------------------------------------------------------------
+
+7.1 New Files to Create (13 files):
+1. `app/src/main/java/com/example/data/local/entity/ChatEntities.kt`
+   - Room entity definitions: `ConversationEntity`, `ChatMessageEntity`, `MessageAttachmentEntity`, `ContactEntity`.
+2. `app/src/main/java/com/example/core/database/dao/ChatDao.kt`
+   - Room DAO queries for conversations, messages, attachments, and contacts.
+3. `app/src/main/java/com/example/domain/model/ChatModels.kt`
+   - Domain enums (`MessageStatus`, `MessageType`, `AttachmentType`) and UI model classes.
+4. `app/src/main/java/com/example/domain/repository/IChatRepository.kt`
+   - Repository interface defining reactive flows and async actions.
+5. `app/src/main/java/com/example/data/repository/ChatRepository.kt`
+   - Concrete implementation of `IChatRepository` with Room transactions.
+6. `app/src/main/java/com/example/viewmodel/ChatViewModel.kt`
+   - Dedicated ViewModel managing conversation streams, message sending, reply state, and search.
+7. `app/src/main/java/com/example/viewmodel/ChatViewModelFactory.kt`
+   - ViewModel provider factory for `ChatViewModel`.
+8. `app/src/main/java/com/example/ui/screens/chat/ChatsScreen.kt`
+   - Main conversation list screen with search, filter chips, and new chat FAB.
+9. `app/src/main/java/com/example/ui/screens/chat/ConversationScreen.kt`
+   - Individual messaging screen with bubbles, auto-scroll, date dividers, and long-press actions.
+10. `app/src/main/java/com/example/ui/screens/chat/ConversationDetailScreen.kt`
+    - Recipient profile details, shared media gallery, and clear chat actions.
+11. `app/src/main/java/com/example/ui/screens/chat/components/MessageBubble.kt`
+    - Composable rendering incoming and outgoing message bubbles with tick indicators.
+12. `app/src/main/java/com/example/ui/screens/chat/components/ChatInputBar.kt`
+    - Text input, attachment sheet trigger, emoji picker, and mic/send buttons.
+13. `app/src/test/java/com/example/ChatRepositoryTest.kt`
+    - Automated JVM unit tests for conversation CRUD, message delivery status flow, and reply linking.
+
+7.2 Existing Files to Modify (6 files):
+1. `app/src/main/java/com/example/data/local/database/WorkspaceDatabase.kt`
+   - Register 4 new entities (`ConversationEntity`, `ChatMessageEntity`, `MessageAttachmentEntity`, `ContactEntity`).
+   - Add abstract `chatDao(): ChatDao`.
+   - Add `MIGRATION_3_4` and update database version to `4`.
+2. `app/src/main/java/com/example/ui/navigation/Screen.kt`
+   - Add sealed `Screen.Chats`, `Screen.Conversation`, `Screen.ConversationDetail`.
+3. `app/src/main/java/com/example/ui/navigation/Navigation.kt`
+   - Add composable route destinations for the 3 new screens and wire up `chatViewModel`.
+4. `app/src/main/java/com/example/ui/components/AppTopBar.kt`
+   - Add chat bubble action button with unread count badge.
+5. `app/src/main/java/com/example/ui/screens/DashboardScreen.kt`
+   - Wire `onNavigateToChats` from TopBar and add "Team Chat" shortcut card.
+6. `app/src/main/java/com/example/ui/screens/MoreScreen.kt`
+   - Add "Team Chat" navigation tile to the communication section.
+
+
+8. PERMISSIONS & DEPENDENCIES AUDIT
+--------------------------------------------------------------------------------
+• Permissions:
+  - Zero broad storage permissions (`READ_EXTERNAL_STORAGE` or `WRITE_EXTERNAL_STORAGE` are FORBIDDEN).
+  - Use modern Android Photo Picker (`ActivityResultContracts.PickVisualMedia()`) which requires ZERO permissions.
+  - Document picker: Uses system storage access framework (`ActivityResultContracts.OpenDocument()`) requiring zero permissions.
+  - Audio recording: Optional `RECORD_AUDIO` permission declared in `AndroidManifest.xml` with runtime permission check launcher in Compose for voice notes.
+• Dependencies:
+  - No new external third-party libraries required.
+  - Uses existing Jetpack Compose, Material 3, Room, Coroutines, and AndroidX Navigation libraries already configured in Version Catalog.
+
+
+9. POTENTIAL TECHNICAL RISKS & MITIGATIONS
+--------------------------------------------------------------------------------
+1. Risk: ViewModel Bloat.
+   - Mitigation: Avoid putting chat logic inside `WorkspaceViewModel.kt`. Create a separate,
+     focused `ChatViewModel.kt`.
+2. Risk: LazyColumn Auto-Scroll Stutter on Fast Message Input.
+   - Mitigation: Use `rememberLazyListState()` with `LaunchedEffect(messages.size)` to smoothly
+     scroll to the latest item without recomposition jank.
+3. Risk: Database Migration Corruption.
+   - Mitigation: Write exhaustive unit test verifying `MIGRATION_3_4` and test in-memory database
+     creation before applying to persistent database.
+4. Risk: Stale Message Status.
+   - Mitigation: Use Room `Flow<List<ChatMessageEntity>>` so message status updates (`SENDING` -> `SENT` -> `READ`)
+     emit reactively and instantly re-render delivery ticks.
+
+
+10. RECOMMENDED IMPLEMENTATION SEQUENCE (PHASE 4)
+--------------------------------------------------------------------------------
+Step 1: Architecture & Planning (COMPLETED in this step).
+Step 2: Database Layer — Entities, DAO, Converters, Database version 4, and `MIGRATION_3_4`.
+Step 3: Domain & Repository Layer — Models, Repository interface, and concrete implementation with local simulation.
+Step 4: ViewModel Layer — `ChatViewModel` with reactive state flows.
+Step 5: UI Components — `MessageBubble`, `ChatInputBar`, `ConversationListItem`, `AttachmentPickerSheet`.
+Step 6: UI Screens — `ChatsScreen`, `ConversationScreen`, `ConversationDetailScreen`.
+Step 7: Navigation & Dashboard Integration — Wire routes in `Screen.kt`, `Navigation.kt`, and `AppTopBar.kt`.
+Step 8: Automated Testing & Verification — Unit tests in `ChatRepositoryTest.kt`, compilation check via `compile_applet`.
+
+
+11. TESTING STRATEGY
+--------------------------------------------------------------------------------
+• Unit Tests:
+  1. Conversation creation, pinning, muting, and unread count reset.
+  2. Message insertion and chronological ordering.
+  3. Delivery status transitions (SENDING -> SENT -> DELIVERED -> READ).
+  4. Quoted reply linkage integrity.
+  5. Cascade deletion of messages when a conversation is deleted.
+  6. Migration test from database v3 to v4.
+• Build Verification:
+  - `gradle :app:testDebugUnitTest`
+  - `compile_applet`
+
+================================================================================
+END OF ARCHITECTURE PLAN
+================================================================================
